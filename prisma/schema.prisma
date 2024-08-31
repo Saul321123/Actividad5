@@ -1,0 +1,82 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  name      String
+  email     String @unique
+  password  String
+  active    Boolean @default(true)
+  role      Role @default(DRIVER) 
+  assignments Assignment[]
+}
+
+
+model Place {
+  id   Int    @id @default(autoincrement())
+  name String
+}
+
+model Assignment {
+  id             Int      @id @default(autoincrement())
+  unitId         Int
+  userId         Int
+  destination    String
+  currentMileage Int
+  fuelLevel      Float
+  startDate      DateTime
+  endDate        DateTime?
+  unit           Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+
+model Unit {
+  id                     Int      @id @default(autoincrement())
+  brand                  String
+  model                  String
+  type                   String
+  color                  String
+  licensePlate           String   @unique
+  currentMileage         Int
+  lastMaintenanceDate    DateTime?
+  lastMaintenanceMileage Int?
+  fuelLevel              Float?
+  status                 UnitStatus
+  assignments            Assignment[]
+  maintenances           Maintenance[]
+}
+
+
+
+model Maintenance {
+  id              Int      @id @default(autoincrement())  // ID de mantenimiento, clave primaria
+  unitId          Int                                       // ID de la unidad, clave foránea
+  maintenanceType String                                    // Tipo de mantenimiento (ej. Preventivo, Correctivo)
+  date            DateTime                                  // Fecha del mantenimiento
+  diagnosis       String                                    // Diagnóstico realizado durante el mantenimiento
+  description     String                                    // Descripción del mantenimiento
+  cost            Float                                     // Costo del mantenimiento
+  unit            Unit     @relation(fields: [unitId], references: [id])  // Relación con la tabla de Unidades
+}
+
+
+enum UnitStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  DECOMMISSIONED
+}
+
+enum Role {
+  ADMIN
+  DRIVER
+}
+
+
